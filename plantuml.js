@@ -49,5 +49,5 @@ var encode6bit = function(b) {
 };
 exports.compress = function(s) {
     s = unescape(encodeURIComponent(s));
-    return "//www.plantuml.com/plantuml/svg/" + encode64(deflate.zip_deflate(s, 9));
+    return "https://www.plantuml.com/plantuml/svg/" + encode64(deflate.zip_deflate(s, 9));
 };
