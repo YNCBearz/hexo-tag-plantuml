@@ -1,6 +1,6 @@
 {
     "name": "hexo-tag-plantuml",
-    "version": "1.0.1",
+    "version": "1.0.0",
     "description": "hexo tag plantuml",
     "author": {
         "name": "oohcode",
@@ -26,8 +26,8 @@
     "_id": "hexo-tag-plantuml@1.0.0",
     "_from": "hexo-tag-plantuml@",
     "dependencies": {
-      "axios": "^1.6.2",
       "bluebird": "^2.10.2",
-      "object-assign": "^2.0.0"
+      "object-assign": "^2.0.0",
+      "request": "^2.65.0"
     }
 }
