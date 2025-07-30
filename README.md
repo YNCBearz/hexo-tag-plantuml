@@ -31,3 +31,32 @@ Specify the code filetype, and whether to use line number in your markdown sourc
         Bob->Alice : hello
 	{% endplantuml %}
 
+## Testing
+
+This project includes comprehensive tests to ensure reliability:
+
+### Running Tests
+
+```bash
+# Run all tests
+npm test
+
+# Run tests in watch mode
+npm run test:watch
+
+# Run tests with coverage report
+npm run test:coverage
+```
+
+### Test Structure
+
+- **Unit Tests**: Test individual functions in `plantuml.js` and `deflate.js`
+- **Integration Tests**: Test Hexo tag registration and rendering
+- **Coverage**: Comprehensive test coverage for all modules
+
+### Test Files
+
+- `__tests__/plantuml.test.js` - Tests for PlantUML compression
+- `__tests__/deflate.test.js` - Tests for deflate compression
+- `__tests__/integration.test.js` - Tests for Hexo integration
+
