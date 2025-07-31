@@ -21,9 +21,28 @@ _config.yml add config:
 
 	tag_plantuml:
 		type: static
+		maxRetries: 3
+		retryDelay: 1000
+		timeout: 10000
 
 **static**: download svg image into html file, "data:image/svg+xml;utf8";
 **dynamic**: use http://www.plantuml.com/plantuml/svg dynamic produce
+
+### Configuration Options
+
+- `type`: `static` or `dynamic` - How to handle PlantUML rendering
+- `maxRetries`: Number of retry attempts for failed requests (default: 3)
+- `retryDelay`: Delay between retry attempts in milliseconds (default: 1000)
+- `timeout`: Request timeout in milliseconds (default: 10000)
+
+### Error Handling
+
+The plugin now includes robust error handling for common issues:
+
+- **HTTP 520 Errors**: Automatically retries failed requests
+- **Server Errors (5xx)**: Implements exponential backoff retry strategy
+- **Network Timeouts**: Configurable timeout settings
+- **Graceful Degradation**: Shows error message when all retries fail
 
 Specify the code filetype, and whether to use line number in your markdown source file, in the common format of tag plugins:
 

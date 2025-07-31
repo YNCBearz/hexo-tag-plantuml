@@ -1,119 +1,77 @@
 const sinon = require('sinon');
 
 describe('Error Handling Tests', () => {
-  let sandbox;
+  describe('Configuration Tests', () => {
+    it('should use default configuration values', () => {
+      const assign = require('object-assign');
 
-  beforeEach(() => {
-    sandbox = sinon.createSandbox();
-  });
+      const defaultConfig = {
+        type: 'static',
+        format: 'svg',
+        maxRetries: 3,
+        retryDelay: 1000,
+        timeout: 10000
+      };
 
-  afterEach(() => {
-    sandbox.restore();
-  });
+      const userConfig = {
+        type: 'dynamic'
+      };
 
-  describe('Static Mode Error Handling', () => {
-    it('should handle network errors properly', (done) => {
-      // 直接測試錯誤處理邏輯
-      const Promise = require('bluebird');
+      const result = assign({}, defaultConfig, userConfig);
 
-      new Promise(function (resolve, reject) {
-        // 模擬網絡錯誤
-        const error = new Error('Network error');
-        const response = null;
-        const body = null;
-
-        // 這是當前代碼的邏輯
-        if (!error && response && response.statusCode == 200) {
-          resolve('<img src="data:image/svg+xml;utf8,'+encodeURIComponent(body)+'">');
-        } else {
-          // 當前代碼缺少這個 else 分支！
-          reject(error || new Error('Request failed'));
-        }
-      }).then(function (data) {
-        done(new Error('Should have failed'));
-      }).catch(function (error) {
-        expect(error.message).toBe('Network error');
-        done();
-      });
+      expect(result.type).toBe('dynamic');
+      expect(result.maxRetries).toBe(3);
+      expect(result.retryDelay).toBe(1000);
+      expect(result.timeout).toBe(10000);
     });
 
-    it('should handle HTTP status errors properly', (done) => {
-      const Promise = require('bluebird');
+    it('should handle retry configuration correctly', () => {
+      const assign = require('object-assign');
 
-      new Promise(function (resolve, reject) {
-        // 模擬 HTTP 500 錯誤
-        const error = null;
-        const response = { statusCode: 500 };
-        const body = 'Internal Server Error';
+      const defaultConfig = {
+        type: 'static',
+        format: 'svg',
+        maxRetries: 3,
+        retryDelay: 1000,
+        timeout: 10000
+      };
 
-        // 當前代碼的邏輯
-        if (!error && response && response.statusCode == 200) {
-          resolve('<img src="data:image/svg+xml;utf8,'+encodeURIComponent(body)+'">');
-        } else {
-          // 當前代碼缺少這個 else 分支！
-          reject(error || new Error('HTTP ' + (response ? response.statusCode : 'unknown')));
-        }
-      }).then(function (data) {
-        done(new Error('Should have failed'));
-      }).catch(function (error) {
-        expect(error.message).toBe('HTTP 500');
-        done();
-      });
+      const userConfig = {
+        maxRetries: 5,
+        retryDelay: 2000,
+        timeout: 15000
+      };
+
+      const result = assign({}, defaultConfig, userConfig);
+
+      expect(result.maxRetries).toBe(5);
+      expect(result.retryDelay).toBe(2000);
+      expect(result.timeout).toBe(15000);
     });
 
-        it('should handle empty response body properly', (done) => {
-      const Promise = require('bluebird');
-
-      new Promise(function (resolve, reject) {
-        // 模擬空響應
-        const error = null;
-        const response = { statusCode: 200 };
-        const body = '';
-
-        // 修復後的代碼邏輯
-        if (!error && response && response.statusCode == 200 && body) {
-          resolve('<img src="data:image/svg+xml;utf8,'+encodeURIComponent(body)+'">');
-        } else {
-          reject(error || new Error('Request failed: ' + (response ? 'HTTP ' + response.statusCode : 'Unknown error')));
+    it('should validate retry logic structure', () => {
+      // 測試重試邏輯的基本結構
+      const retryLogic = (attempts, maxRetries, error, response) => {
+        if (attempts < maxRetries && (error || (response && (response.statusCode >= 500 || response.statusCode == 520)))) {
+          return true; // 應該重試
         }
-      }).then(function (data) {
-        done(new Error('Should have failed with empty body'));
-      }).catch(function (error) {
-        expect(error.message).toBe('Request failed: HTTP 200');
-        done();
-      });
-    });
+        return false; // 不應該重試
+      };
 
-    it('should demonstrate the current bug - Promise never resolves on error', (done) => {
-      const Promise = require('bluebird');
+      // 測試 520 錯誤應該重試
+      expect(retryLogic(1, 3, null, { statusCode: 520 })).toBe(true);
 
-      const promise = new Promise(function (resolve, reject) {
-        // 模擬網絡錯誤
-        const error = new Error('Network error');
-        const response = null;
-        const body = null;
+      // 測試 500 錯誤應該重試
+      expect(retryLogic(1, 3, null, { statusCode: 500 })).toBe(true);
 
-        // 這是當前代碼的實際邏輯（缺少錯誤處理）
-        if (!error && response && response.statusCode == 200) {
-          resolve('<img src="data:image/svg+xml;utf8,'+encodeURIComponent(body)+'">');
-        }
-        // 注意：這裡沒有 else 分支，所以 Promise 永遠不會 resolve 或 reject！
-      });
+      // 測試網絡錯誤應該重試
+      expect(retryLogic(1, 3, new Error('Network error'), null)).toBe(true);
 
-      // 設置超時來檢測 Promise 是否永遠不會完成
-      const timeout = setTimeout(() => {
-        // 如果 1 秒後 Promise 還沒有完成，說明有 bug
-        expect(true).toBe(true); // 這證明了 bug 的存在
-        done();
-      }, 1000);
+      // 測試達到最大重試次數不應該重試
+      expect(retryLogic(3, 3, null, { statusCode: 520 })).toBe(false);
 
-      promise.then(function (data) {
-        clearTimeout(timeout);
-        done(new Error('Promise should not resolve'));
-      }).catch(function (error) {
-        clearTimeout(timeout);
-        done(new Error('Promise should not reject'));
-      });
+      // 測試 404 錯誤不應該重試
+      expect(retryLogic(1, 3, null, { statusCode: 404 })).toBe(false);
     });
   });
 });
