@@ -73,6 +73,42 @@ describe('Integration Tests', () => {
         done();
       });
     });
+
+    it('should handle HTTP status errors', (done) => {
+      const mockResponse = {
+        statusCode: 500,
+        body: 'Internal Server Error'
+      };
+
+      const mockRequest = function(url, callback) {
+        callback(null, mockResponse, mockResponse.body);
+      };
+
+      mockRequest('https://www.plantuml.com/plantuml/svg/test', (error, response, body) => {
+        expect(error).toBeNull();
+        expect(response.statusCode).toBe(500);
+        expect(body).toBe('Internal Server Error');
+        done();
+      });
+    });
+
+    it('should handle empty response body', (done) => {
+      const mockResponse = {
+        statusCode: 200,
+        body: ''
+      };
+
+      const mockRequest = function(url, callback) {
+        callback(null, mockResponse, mockResponse.body);
+      };
+
+      mockRequest('https://www.plantuml.com/plantuml/svg/test', (error, response, body) => {
+        expect(error).toBeNull();
+        expect(response.statusCode).toBe(200);
+        expect(body).toBe('');
+        done();
+      });
+    });
   });
 
   describe('Configuration Handling', () => {

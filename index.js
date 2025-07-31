@@ -15,9 +15,10 @@ hexo.extend.tag.register('plantuml', function(args, content){
         var plantumlSvgUrl = plantuml.compress(content);
         if(hexo.config.tag_plantuml.type==='static') {
             request(plantumlSvgUrl, function (error, response, body) {
-                if (!error && response.statusCode == 200) {
+                if (!error && response && response.statusCode == 200 && body) {
                     resolve('<img src="data:image/svg+xml;utf8,'+encodeURIComponent(body)+'">');
-
+                } else {
+                    reject(error || new Error('Request failed: ' + (response ? 'HTTP ' + response.statusCode : 'Unknown error')));
                 }
             });
         } else {
