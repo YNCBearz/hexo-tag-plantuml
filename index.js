@@ -8,9 +8,9 @@ var assign = require('object-assign');
 hexo.config.tag_plantuml = assign({
     type:'static', // static | dynamic
     format: 'svg', // svg | png
-    maxRetries: 3, // 最大重試次數
-    retryDelay: 1000, // 重試延遲（毫秒）
-    timeout: 10000 // 請求超時時間（毫秒）
+    maxRetries: 5,
+    retryDelay: 1000,
+    timeout: 30000
 }, hexo.config.tag_plantuml);
 
 // 重試函數
@@ -25,7 +25,6 @@ function retryRequest(url, options, maxRetries, retryDelay) {
                 if (!error && response && response.statusCode == 200 && body) {
                     resolve(body);
                 } else if (attempts < maxRetries && (error || (response && (response.statusCode >= 500 || response.statusCode == 520)))) {
-                    // 如果是服務器錯誤（5xx）或 520 錯誤，則重試
                     console.log(`PlantUML request failed (attempt ${attempts}/${maxRetries}), retrying in ${retryDelay}ms...`);
                     setTimeout(attempt, retryDelay);
                 } else {
